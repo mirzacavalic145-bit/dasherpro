@@ -1,6 +1,8 @@
 // POST /api/coach
 // Streams AI coach responses for any dasher market
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req) {
   try {
     const { messages, city } = await req.json()

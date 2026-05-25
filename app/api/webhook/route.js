@@ -3,8 +3,10 @@
 // Set up at: https://dashboard.stripe.com/webhooks
 // Events to listen for: checkout.session.completed, customer.subscription.deleted
 
-import { stripe } from '../../../lib/stripe'
-import { supabaseAdmin } from '../../../lib/supabase'
+export const dynamic = 'force-dynamic'
+
+import { getStripe } from '../../../lib/stripe'
+import { getSupabaseAdmin } from '../../../lib/supabase'
 
 export async function POST(req) {
   const body = await req.text()
@@ -12,11 +14,13 @@ export async function POST(req) {
 
   let event
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
+    event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
   } catch (err) {
     console.error('Webhook signature failed:', err.message)
     return new Response('Invalid signature', { status: 400 })
   }
+
+  const supabaseAdmin = getSupabaseAdmin()
 
   try {
     switch (event.type) {
@@ -24,7 +28,6 @@ export async function POST(req) {
         const session = event.data.object
         const { planKey } = session.metadata
 
-        // Update or create user subscription record
         await supabaseAdmin.from('subscriptions').upsert({
           stripe_customer_id: session.customer,
           stripe_subscription_id: session.subscription,

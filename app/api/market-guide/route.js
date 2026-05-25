@@ -2,7 +2,9 @@
 // Generates an AI-powered local market guide for any US city
 // Results are cached in Supabase for 7 days to minimize API costs
 
-import { supabaseAdmin } from '../../../lib/supabase'
+export const dynamic = 'force-dynamic'
+
+import { getSupabaseAdmin } from '../../../lib/supabase'
 
 export async function POST(req) {
   try {
@@ -11,6 +13,7 @@ export async function POST(req) {
       return Response.json({ error: 'City name required' }, { status: 400 })
     }
 
+    const supabaseAdmin = getSupabaseAdmin()
     const cityKey = city.trim().toLowerCase().replace(/\s+/g, '-')
 
     // ── 1. Check cache first (7-day TTL) ──────────────────────────
