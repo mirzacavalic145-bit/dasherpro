@@ -13,8 +13,8 @@
   --gray-mid: #e5e5e2;
   --red: #dc2626;
   --sidebar: #0d0d0d;
-  --font-display: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Geist', sans-serif;
+  --font-body: 'Inter', sans-serif;
 }
 
 body {
@@ -23,9 +23,14 @@ body {
   color: var(--black);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-h1, h2, h3, h4 { font-family: var(--font-display); }
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-feature-settings: 'ss01', 'cv01';
+}
 
 button { cursor: pointer; font-family: var(--font-body); }
 
@@ -88,9 +93,9 @@ a { color: inherit; text-decoration: none; }
   width: 100%; max-width: 1100px; padding: 16px 32px;
 }
 .nav-logo {
-  font-family: var(--font-display); font-weight: 800; font-size: 20px;
+  font-family: var(--font-display); font-weight: 800; font-size: 18px;
   color: var(--black); display: flex; align-items: center; gap: 7px;
-  text-decoration: none;
+  text-decoration: none; letter-spacing: -.02em;
 }
 .logo-dot {
   width: 9px; height: 9px; border-radius: 50%;
@@ -121,13 +126,14 @@ a { color: inherit; text-decoration: none; }
   font-family: var(--font-display); letter-spacing: .02em;
 }
 .hero h1 {
-  font-size: clamp(40px, 7vw, 72px); font-weight: 800;
-  line-height: 1.04; margin-bottom: 22px; letter-spacing: -.025em;
+  font-size: clamp(38px, 6.5vw, 68px); font-weight: 800;
+  line-height: 1.02; margin-bottom: 22px; letter-spacing: -.04em;
 }
 .hero h1 em { color: var(--green); font-style: normal; }
 .hero-sub {
-  font-size: 18px; color: var(--gray); max-width: 520px;
-  margin: 0 auto 40px; line-height: 1.65; font-weight: 300;
+  font-size: 17px; color: var(--gray); max-width: 500px;
+  margin: 0 auto 40px; line-height: 1.6; font-weight: 400;
+  letter-spacing: -.01em;
 }
 .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .hero-stats {
@@ -135,18 +141,18 @@ a { color: inherit; text-decoration: none; }
   margin: 56px auto 0; padding-top: 40px; max-width: 680px;
   border-top: 1px solid var(--gray-mid); flex-wrap: wrap;
 }
-.hero-stat-num { font-family: var(--font-display); font-size: 30px; font-weight: 800; }
-.hero-stat-label { font-size: 12px; color: var(--gray); margin-top: 3px; }
+.hero-stat-num { font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.hero-stat-label { font-size: 11px; color: var(--gray); margin-top: 4px; letter-spacing: .01em; }
 
 /* ── Section ── */
 .section { padding: 72px 32px; max-width: 1040px; margin: 0 auto; }
 .section-eyebrow {
-  font-family: var(--font-display); font-size: 11px; font-weight: 700;
-  letter-spacing: .1em; text-transform: uppercase; color: var(--green); margin-bottom: 12px;
+  font-family: var(--font-body); font-size: 11px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--green); margin-bottom: 14px;
 }
 .section-h {
-  font-family: var(--font-display); font-size: clamp(26px, 4vw, 40px);
-  font-weight: 800; margin-bottom: 44px; line-height: 1.15; letter-spacing: -.02em;
+  font-family: var(--font-display); font-size: clamp(24px, 3.8vw, 38px);
+  font-weight: 800; margin-bottom: 44px; line-height: 1.1; letter-spacing: -.035em;
 }
 
 /* ── Feature grid ── */
@@ -163,8 +169,8 @@ a { color: inherit; text-decoration: none; }
   display: flex; align-items: center; justify-content: center;
   font-size: 20px; margin-bottom: 16px; transition: all .22s;
 }
-.feat-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 7px; }
-.feat-desc { font-size: 13px; color: var(--gray); line-height: 1.55; transition: color .22s; }
+.feat-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; margin-bottom: 7px; letter-spacing: -.02em; }
+.feat-desc { font-size: 13px; color: var(--gray); line-height: 1.6; transition: color .22s; letter-spacing: -.005em; }
 
 /* ── Pricing ── */
 .pricing-grid {
@@ -188,7 +194,7 @@ a { color: inherit; text-decoration: none; }
 }
 .price-card.popular .price-tier { color: #666; }
 .price-card.annual  .price-tier { color: var(--green-dark); }
-.price-num { font-family: var(--font-display); font-size: 48px; font-weight: 800; line-height: 1; }
+.price-num { font-family: var(--font-display); font-size: 44px; font-weight: 800; line-height: 1; letter-spacing: -.04em; }
 .price-period { font-size: 13px; color: var(--gray); margin: 4px 0 22px; }
 .price-card.popular .price-period { color: #888; }
 .price-features { list-style: none; margin-bottom: 26px; }
@@ -214,7 +220,7 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Social proof ── */
 .social-band { background: var(--black); padding: 60px 32px; text-align: center; }
-.social-band h2 { color: var(--white); font-size: clamp(22px, 3.5vw, 34px); font-weight: 800; margin-bottom: 8px; }
+.social-band h2 { color: var(--white); font-size: clamp(20px, 3.2vw, 32px); font-weight: 800; margin-bottom: 8px; letter-spacing: -.03em; }
 .social-sub { color: #888; font-size: 15px; margin-bottom: 40px; }
 .testi-grid {
   display: grid; grid-template-columns: repeat(3, 1fr);
@@ -234,8 +240,8 @@ a { color: inherit; text-decoration: none; }
 
 /* ── CTA band ── */
 .cta-band { background: var(--green); padding: 64px 32px; text-align: center; }
-.cta-band h2 { color: var(--white); font-size: clamp(24px,4vw,38px); font-weight: 800; margin-bottom: 10px; }
-.cta-band p  { color: rgba(255,255,255,.8); margin-bottom: 28px; font-size: 16px; }
+.cta-band h2 { color: var(--white); font-size: clamp(22px,3.8vw,36px); font-weight: 800; margin-bottom: 10px; letter-spacing: -.035em; }
+.cta-band p  { color: rgba(255,255,255,.8); margin-bottom: 28px; font-size: 15px; letter-spacing: -.01em; }
 .btn-white {
   padding: 14px 32px; background: var(--white); color: var(--green-dark);
   font-size: 15px; font-weight: 600; border-radius: 10px; border: none; transition: all .15s;
@@ -250,9 +256,10 @@ a { color: inherit; text-decoration: none; }
   position: sticky; top: 0; height: 100vh; overflow-y: auto;
 }
 .sidebar-logo {
-  font-family: var(--font-display); font-weight: 800; font-size: 17px;
+  font-family: var(--font-display); font-weight: 800; font-size: 16px;
   color: var(--white); padding: 8px 12px; margin-bottom: 14px;
   display: flex; align-items: center; gap: 7px; text-decoration: none;
+  letter-spacing: -.02em;
 }
 .sb-label {
   font-size: 10px; color: #444; text-transform: uppercase;
@@ -283,7 +290,7 @@ a { color: inherit; text-decoration: none; }
   display: flex; align-items: center; justify-content: space-between;
   position: sticky; top: 0; z-index: 10;
 }
-.main-topbar h2 { font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+.main-topbar h2 { font-family: var(--font-display); font-size: 16px; font-weight: 700; letter-spacing: -.02em; }
 .main-body { padding: 22px 26px; }
 
 /* ── Dashboard components ── */
@@ -296,7 +303,7 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--gray-mid);
 }
 .metric-label { font-size: 11px; color: var(--gray); margin-bottom: 5px; }
-.metric-val { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1; }
+.metric-val { font-family: var(--font-display); font-size: 22px; font-weight: 700; line-height: 1; letter-spacing: -.03em; }
 .metric-sub { font-size: 11px; color: var(--gray); margin-top: 4px; }
 .clr-green { color: var(--green); }
 .clr-amber { color: var(--amber); }
@@ -419,7 +426,7 @@ footer {
   color: var(--white); display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 800; flex-shrink: 0; font-family: var(--font-display);
 }
-.zone-name { font-family: var(--font-display); font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.zone-name { font-family: var(--font-display); font-size: 14px; font-weight: 700; margin-bottom: 4px; letter-spacing: -.02em; }
 .zone-desc { font-size: 12px; color: var(--gray); line-height: 1.5; }
 .zone-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
 .ztag { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 500; }
