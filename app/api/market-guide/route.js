@@ -1,6 +1,6 @@
 // POST /api/market-guide
 // Generates an AI-powered local market guide for any US city
-// Results are cached in Supabase for 7 days to minimize API costs
+// Results are cached in Supabase for 30 days to minimize API costs
 
 export const dynamic = 'force-dynamic'
 
@@ -26,8 +26,8 @@ export async function POST(req) {
 
       if (cached) {
         const age = Date.now() - new Date(cached.created_at).getTime()
-        const sevenDays = 7 * 24 * 60 * 60 * 1000
-        if (age < sevenDays) {
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000
+        if (age < thirtyDays) {
           return Response.json({ guide: cached.guide, cached: true })
         }
       }

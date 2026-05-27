@@ -1,10 +1,36 @@
 // POST /api/coach
-// Streams AI coach responses for any dasher market
+// AI coach responses for any dasher market
+// Rate limited: 10 requests per hour per IP
 
 export const dynamic = 'force-dynamic'
 
+// In-memory rate limit store: { ip -> [timestamps] }
+const rateLimitStore = new Map()
+const LIMIT = 10        // max requests
+const WINDOW = 60 * 60 * 1000  // 1 hour in ms
+
+function isRateLimited(ip) {
+  const now = Date.now()
+  const timestamps = (rateLimitStore.get(ip) || []).filter(t => now - t < WINDOW)
+  if (timestamps.length >= LIMIT) return true
+  timestamps.push(now)
+  rateLimitStore.set(ip, timestamps)
+  return false
+}
+
 export async function POST(req) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || req.headers.get('x-real-ip')
+      || 'unknown'
+
+    if (isRateLimited(ip)) {
+      return Response.json(
+        { reply: "You've sent too many messages. Limit is 10 per hour — come back soon! 🚗" },
+        { status: 429 }
+      )
+    }
+
     const { messages, city } = await req.json()
 
     const systemPrompt = `You are DasherPro's AI strategy coach — an expert on maximizing DoorDash earnings for dashers across the entire United States.
