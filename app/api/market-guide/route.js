@@ -13,22 +13,26 @@ export async function POST(req) {
       return Response.json({ error: 'City name required' }, { status: 400 })
     }
 
-    const supabaseAdmin = getSupabaseAdmin()
     const cityKey = city.trim().toLowerCase().replace(/\s+/g, '-')
 
-    // ── 1. Check cache first (7-day TTL) ──────────────────────────
-    const { data: cached } = await supabaseAdmin
-      .from('market_guides')
-      .select('guide, created_at')
-      .eq('city_key', cityKey)
-      .single()
+    // ── 1. Check cache first (7-day TTL) — non-fatal if Supabase unavailable ──
+    try {
+      const supabaseAdmin = getSupabaseAdmin()
+      const { data: cached } = await supabaseAdmin
+        .from('market_guides')
+        .select('guide, created_at')
+        .eq('city_key', cityKey)
+        .single()
 
-    if (cached) {
-      const age = Date.now() - new Date(cached.created_at).getTime()
-      const sevenDays = 7 * 24 * 60 * 60 * 1000
-      if (age < sevenDays) {
-        return Response.json({ guide: cached.guide, cached: true })
+      if (cached) {
+        const age = Date.now() - new Date(cached.created_at).getTime()
+        const sevenDays = 7 * 24 * 60 * 60 * 1000
+        if (age < sevenDays) {
+          return Response.json({ guide: cached.guide, cached: true })
+        }
       }
+    } catch (cacheErr) {
+      console.warn('Cache check skipped:', cacheErr.message)
     }
 
     // ── 2. Generate fresh guide with Claude ───────────────────────
@@ -77,7 +81,7 @@ Use your knowledge of ${city}'s geography, restaurant districts, demographics, a
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1500,
         messages: [{ role: 'user', content: prompt }],
       }),
@@ -91,10 +95,15 @@ Use your knowledge of ${city}'s geography, restaurant districts, demographics, a
     if (!jsonMatch) throw new Error('No JSON in AI response')
     const guide = JSON.parse(jsonMatch[0])
 
-    // ── 3. Cache in Supabase ──────────────────────────────────────
-    await supabaseAdmin
-      .from('market_guides')
-      .upsert({ city_key: cityKey, city_name: city, guide, created_at: new Date().toISOString() })
+    // ── 3. Cache in Supabase — non-fatal ─────────────────────────
+    try {
+      const supabaseAdmin = getSupabaseAdmin()
+      await supabaseAdmin
+        .from('market_guides')
+        .upsert({ city_key: cityKey, city_name: city, guide, created_at: new Date().toISOString() })
+    } catch (writeErr) {
+      console.warn('Cache write skipped:', writeErr.message)
+    }
 
     return Response.json({ guide, cached: false })
 

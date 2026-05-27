@@ -33,7 +33,7 @@ Keep responses concise: 2–4 short paragraphs max. Be like a veteran dasher men
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 800,
         system: systemPrompt,
         messages,
