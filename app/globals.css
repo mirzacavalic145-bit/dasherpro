@@ -413,6 +413,7 @@ footer {
   border-radius: 8px; height: 16px;
 }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
 
 /* ── Market guide ── */
 .market-guide { animation: fadeIn .4s ease; }

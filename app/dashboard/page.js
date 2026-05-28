@@ -25,6 +25,66 @@ export default function DashboardPage() {
   const [gPay, setGPay] = useState(''), [gMiles, setGMiles] = useState('')
   const [gWait, setGWait] = useState(''), [gTime, setGTime] = useState('')
   const [verdict, setVerdict] = useState(null)
+  const [voiceListening, setVoiceListening] = useState(false)
+  const [voiceStatus, setVoiceStatus] = useState('')
+
+  const WORD_NUMS = { zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:0.5,twenty5:0.25,twentyfive:0.25 }
+
+  const wordsToNum = (str) => {
+    const s = str.toLowerCase().trim()
+    const direct = parseFloat(s)
+    if (!isNaN(direct)) return direct
+    // handle "eight fifty" = 8.50, "seven twenty-five" = 7.25
+    const parts = s.split(/\s+/)
+    if (parts.length === 2) {
+      const a = WORD_NUMS[parts[0]], b = WORD_NUMS[parts[1]]
+      if (a !== undefined && b !== undefined) return a + b
+    }
+    return WORD_NUMS[s] ?? null
+  }
+
+  const parseVoiceInput = (transcript) => {
+    const t = transcript.toLowerCase()
+      .replace(/dollars?/g, '').replace(/bucks?/g, '').replace(/and/g, '')
+      .replace(/[-]/g, ' ').trim()
+    const milesMatch = t.match(/(.+?)\s+(?:for\s+)?(\S+(?:\s+\S+)?)\s+miles?/)
+    if (milesMatch) {
+      const pay = wordsToNum(milesMatch[1].trim())
+      const miles = wordsToNum(milesMatch[2].trim())
+      if (pay !== null && miles !== null) return { pay, miles }
+    }
+    const nums = t.match(/\d+\.?\d*/g)
+    if (nums && nums.length >= 2) return { pay: parseFloat(nums[0]), miles: parseFloat(nums[1]) }
+    return null
+  }
+
+  const startVoice = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) { setVoiceStatus('Voice not supported on this browser'); return }
+    const rec = new SR()
+    rec.lang = 'en-US'
+    rec.interimResults = false
+    rec.maxAlternatives = 1
+    setVoiceListening(true)
+    setVoiceStatus('Listening… say "eight fifty, three miles"')
+    rec.start()
+    rec.onresult = (e) => {
+      const transcript = e.results[0][0].transcript
+      const parsed = parseVoiceInput(transcript)
+      if (parsed) {
+        setGPay(String(parsed.pay))
+        setGMiles(String(parsed.miles))
+        setVoiceStatus(`Got it: $${parsed.pay} · ${parsed.miles} miles`)
+        setTimeout(() => setVoiceStatus(''), 3000)
+      } else {
+        setVoiceStatus(`Heard "${transcript}" — try again`)
+        setTimeout(() => setVoiceStatus(''), 3000)
+      }
+      setVoiceListening(false)
+    }
+    rec.onerror = () => { setVoiceStatus('Mic error — try again'); setVoiceListening(false) }
+    rec.onend = () => setVoiceListening(false)
+  }
 
   // AI coach
   const [chatHistory, setChatHistory] = useState([
@@ -375,7 +435,25 @@ export default function DashboardPage() {
             <>
               <div className="dash-card">
                 <h3>✅ Order grader</h3>
-                <p style={{ fontSize: 13, color: 'var(--gray)', marginBottom: 16 }}>Enter order details for an instant accept/decline verdict.</p>
+                <p style={{ fontSize: 13, color: 'var(--gray)', marginBottom: 12 }}>Enter order details for an instant accept/decline verdict.</p>
+
+                {/* Voice input */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '12px 14px', background: 'var(--gray-light)', borderRadius: 10 }}>
+                  <button onClick={startVoice} disabled={voiceListening} style={{
+                    width: 44, height: 44, borderRadius: '50%', border: 'none', cursor: 'pointer', flexShrink: 0,
+                    background: voiceListening ? 'var(--red)' : 'var(--green)',
+                    color: 'var(--white)', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    animation: voiceListening ? 'pulse 1s infinite' : 'none',
+                    transition: 'background .15s',
+                  }}>🎤</button>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 2 }}>Voice input</div>
+                    <div style={{ fontSize: 11, color: voiceStatus.startsWith('Got') ? 'var(--green-dark)' : 'var(--gray)' }}>
+                      {voiceStatus || 'Tap mic → say "eight fifty, three miles"'}
+                    </div>
+                  </div>
+                </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                   <div className="inp-group"><label>Order pay ($)</label><input type="number" placeholder="e.g. 8.50" value={gPay} onChange={e => setGPay(e.target.value)} /></div>
                   <div className="inp-group"><label>Distance (miles)</label><input type="number" placeholder="e.g. 3.2" value={gMiles} onChange={e => setGMiles(e.target.value)} /></div>
