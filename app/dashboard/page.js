@@ -8,6 +8,7 @@ const PANELS = [
   { id: 'schedule',  label: 'Schedule',       icon: 'M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM16 2v4M8 2v4M3 10h18' },
   { id: 'grader',    label: 'Order grader',   icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
   { id: 'coach',     label: 'AI coach',       icon: 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z' },
+  { id: 'forecast',  label: 'Shift forecast', icon: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z' },
   { id: 'earnings',  label: 'Earnings',       icon: 'M22 7L13.5 15.5l-5-5L2 17M16 7h6v6' },
   { id: 'tax',       label: 'Tax tracker',    icon: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8' },
 ]
@@ -38,6 +39,35 @@ export default function DashboardPage() {
 
   // Tax
   const [taxGross, setTaxGross] = useState(''), [taxMiles, setTaxMiles] = useState('')
+
+  // Shift forecast
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+  const TIMES = ['6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','4:30 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM']
+  const [fcDay, setFcDay] = useState('Friday')
+  const [fcStart, setFcStart] = useState('4:30 PM')
+  const [fcEnd, setFcEnd] = useState('9:00 PM')
+  const [fcResult, setFcResult] = useState(null)
+  const [fcLoading, setFcLoading] = useState(false)
+  const [fcError, setFcError] = useState('')
+
+  const runForecast = async () => {
+    setFcLoading(true)
+    setFcError('')
+    setFcResult(null)
+    try {
+      const res = await fetch('/api/forecast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ city: savedCity, day: fcDay, startTime: fcStart, endTime: fcEnd }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setFcResult(data.forecast)
+    } catch (e) {
+      setFcError(e.message || 'Failed to generate forecast')
+    }
+    setFcLoading(false)
+  }
 
   useEffect(() => {
     const stored = localStorage.getItem('dasherpro_city')
@@ -393,6 +423,104 @@ export default function DashboardPage() {
                 <button className="chat-send" onClick={sendChat} disabled={chatLoading || !chatInput.trim()}>Send</button>
               </div>
             </div>
+          )}
+
+          {/* ── SHIFT FORECAST ── */}
+          {panel === 'forecast' && (
+            <>
+              <div className="dash-card">
+                <h3>⚡ Shift earnings forecast</h3>
+                <p style={{ fontSize: 13, color: 'var(--gray)', marginBottom: 20, lineHeight: 1.5 }}>
+                  Pick a day and shift window — AI predicts your earnings range based on your city's demand patterns.
+                </p>
+
+                {/* Day picker */}
+                <div style={{ marginBottom: 18 }}>
+                  <div style={{ fontSize: 12, color: 'var(--gray)', fontWeight: 500, marginBottom: 8 }}>Day</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {DAYS.map(d => (
+                      <button key={d} onClick={() => setFcDay(d)} style={{
+                        padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 500, border: 'none',
+                        background: fcDay === d ? 'var(--black)' : 'var(--gray-light)',
+                        color: fcDay === d ? 'var(--white)' : 'var(--black)',
+                        cursor: 'pointer', transition: 'all .15s',
+                      }}>{d.slice(0, 3)}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Time pickers */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
+                  <div className="inp-group">
+                    <label>Shift start</label>
+                    <select value={fcStart} onChange={e => setFcStart(e.target.value)}
+                      style={{ padding: '11px 13px', border: '1.5px solid var(--gray-mid)', borderRadius: 9, fontSize: 14, background: 'var(--white)', outline: 'none' }}>
+                      {TIMES.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div className="inp-group">
+                    <label>Shift end</label>
+                    <select value={fcEnd} onChange={e => setFcEnd(e.target.value)}
+                      style={{ padding: '11px 13px', border: '1.5px solid var(--gray-mid)', borderRadius: 9, fontSize: 14, background: 'var(--white)', outline: 'none' }}>
+                      {TIMES.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {!savedCity && <div className="warn-box" style={{ marginBottom: 14 }}>Set your city in Zone map for a city-specific forecast.</div>}
+
+                <button onClick={runForecast} disabled={fcLoading}
+                  style={{ width: '100%', padding: 13, background: 'var(--green)', color: 'var(--white)', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+                  {fcLoading ? 'Forecasting your shift...' : `Forecast ${fcDay} ${fcStart} – ${fcEnd} →`}
+                </button>
+                {fcError && <p style={{ color: 'var(--red)', fontSize: 13, marginTop: 10 }}>{fcError}</p>}
+              </div>
+
+              {fcResult && (
+                <>
+                  {/* Earnings range */}
+                  <div className="dash-card">
+                    <h3>📊 Earnings forecast — {fcDay} {fcStart}–{fcEnd}{savedCity ? ` · ${savedCity}` : ''}</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 16 }}>
+                      {[
+                        { label: 'Conservative', val: `$${fcResult.low}`, color: 'var(--amber)' },
+                        { label: 'Realistic', val: `$${fcResult.mid}`, color: 'var(--green)' },
+                        { label: 'Best case', val: `$${fcResult.high}`, color: 'var(--green-dark)' },
+                      ].map(({ label, val, color }) => (
+                        <div key={label} style={{ background: 'var(--gray-light)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                          <div style={{ fontSize: 11, color: 'var(--gray)', marginBottom: 6 }}>{label}</div>
+                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, color, letterSpacing: '-.03em' }}>{val}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ padding: '12px 14px', background: 'var(--green-light)', borderRadius: 10, fontSize: 13, color: 'var(--green-dark)', fontWeight: 500, marginBottom: 12 }}>
+                      {fcResult.verdict}
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: 180, background: 'var(--gray-light)', borderRadius: 10, padding: 14 }}>
+                        <div style={{ fontSize: 11, color: 'var(--gray)', marginBottom: 4 }}>Best zone to start</div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{fcResult.bestZone}</div>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 180, background: 'var(--gray-light)', borderRadius: 10, padding: 14 }}>
+                        <div style={{ fontSize: 11, color: 'var(--gray)', marginBottom: 4 }}>Peak window</div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{fcResult.peakWindow}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tips + warning */}
+                  <div className="dash-card">
+                    <h3>💡 Tips for this shift</h3>
+                    {fcResult.tips?.map((tip, i) => (
+                      <div key={i} className="tip-box" style={{ marginBottom: 8 }}>{tip}</div>
+                    ))}
+                    {fcResult.warning && (
+                      <div className="warn-box" style={{ marginTop: 8 }}>⚠️ {fcResult.warning}</div>
+                    )}
+                  </div>
+                </>
+              )}
+            </>
           )}
 
           {/* ── EARNINGS ── */}
