@@ -100,6 +100,30 @@ export default function DashboardPage() {
   // Tax
   const [taxGross, setTaxGross] = useState(''), [taxMiles, setTaxMiles] = useState('')
 
+  // GPS location
+  const [gpsLoading, setGpsLoading] = useState(false)
+
+  const detectCity = async () => {
+    if (!navigator.geolocation) return
+    setGpsLoading(true)
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const { latitude, longitude } = pos.coords
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+          { headers: { 'Accept-Language': 'en' } }
+        )
+        const data = await res.json()
+        const addr = data.address
+        const detected = `${addr.city || addr.town || addr.village || addr.county}, ${addr.state}`
+        setCity(detected)
+      } catch {
+        // silently fail — user can type manually
+      }
+      setGpsLoading(false)
+    }, () => setGpsLoading(false))
+  }
+
   // Shift forecast
   const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
   const TIMES = ['6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','4:30 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM']
@@ -326,7 +350,16 @@ export default function DashboardPage() {
                     value={city}
                     onChange={e => setCity(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && fetchGuide()}
+                    style={{ paddingRight: 48 }}
                   />
+                  <button onClick={detectCity} disabled={gpsLoading} title="Detect my location" style={{
+                    position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                    width: 32, height: 32, borderRadius: '50%', border: 'none',
+                    background: gpsLoading ? 'var(--gray-mid)' : 'var(--green)',
+                    color: 'var(--white)', fontSize: 15, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'background .15s',
+                  }}>{gpsLoading ? '…' : '🎯'}</button>
                 </div>
                 <button className="city-btn" onClick={fetchGuide} disabled={guideLoading || !city.trim()}>
                   {guideLoading ? 'Generating your market guide...' : 'Get my market guide →'}
