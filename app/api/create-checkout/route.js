@@ -21,7 +21,7 @@ export async function POST(req) {
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscribed=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/#pricing`,
       allow_promotion_codes: true,
-      subscription_data: planKey === 'pro' ? { trial_period_days: 7 } : undefined,
+      subscription_data: { trial_period_days: 3 },
       metadata: { planKey },
     })
 

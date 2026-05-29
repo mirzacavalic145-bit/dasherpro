@@ -111,7 +111,8 @@ export default function HomePage() {
       {/* PRICING */}
       <div className="section" id="pricing" style={{ textAlign: 'center', maxWidth: 960 }}>
         <div className="section-eyebrow">Pricing</div>
-        <div className="section-h">One hour of dashing<br />pays for a whole month</div>
+        <div className="section-h">Try free for 3 days.<br />Cancel anytime.</div>
+        <p style={{ fontSize: 14, color: 'var(--gray)', marginTop: -28, marginBottom: 8 }}>Card required · No charge until day 4 · Cancel before then and pay nothing.</p>
         <div className="pricing-grid">
           {/* Hustler */}
           <div className="price-card">
@@ -121,7 +122,7 @@ export default function HomePage() {
             <ul className="price-features">
               {PLANS.hustler.features.map(f => <li key={f}><span className="chk">✓</span>{f}</li>)}
             </ul>
-            <button className="price-btn pbtn-light" onClick={() => handleCheckout('hustler')}>Get started</button>
+            <button className="price-btn pbtn-light" onClick={() => handleCheckout('hustler')}>Start 3-day free trial</button>
           </div>
 
           {/* Pro */}
@@ -133,7 +134,7 @@ export default function HomePage() {
             <ul className="price-features">
               {PLANS.pro.features.map(f => <li key={f}><span className="chk">✓</span>{f}</li>)}
             </ul>
-            <button className="price-btn pbtn-dark" onClick={() => handleCheckout('pro')}>Start free trial</button>
+            <button className="price-btn pbtn-dark" onClick={() => handleCheckout('pro')}>Start 3-day free trial</button>
           </div>
 
           {/* Annual */}
@@ -145,7 +146,7 @@ export default function HomePage() {
             <ul className="price-features">
               {PLANS.annual.features.map(f => <li key={f}><span className="chk">✓</span>{f}</li>)}
             </ul>
-            <button className="price-btn pbtn-green" onClick={() => handleCheckout('annual')}>Get annual deal</button>
+            <button className="price-btn pbtn-green" onClick={() => handleCheckout('annual')}>Start 3-day free trial</button>
           </div>
         </div>
       </div>
