@@ -1,8 +1,36 @@
 'use client'
 import Link from 'next/link'
+import { useState } from 'react'
 import { PLANS } from '../lib/stripe'
 
 export default function HomePage() {
+  const [email, setEmail] = useState('')
+  const [subStatus, setSubStatus] = useState('')
+  const [subLoading, setSubLoading] = useState(false)
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault()
+    if (!email.trim()) return
+    setSubLoading(true)
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setSubStatus('success')
+        setEmail('')
+      } else {
+        setSubStatus('error')
+      }
+    } catch {
+      setSubStatus('error')
+    }
+    setSubLoading(false)
+  }
+
   const handleCheckout = async (planKey) => {
     const res = await fetch('/api/create-checkout', {
       method: 'POST',
@@ -105,6 +133,39 @@ export default function HomePage() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* EMAIL CAPTURE */}
+      <div style={{ background: 'var(--green-light)', padding: '56px 32px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 520, margin: '0 auto' }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--green-dark)', marginBottom: 12 }}>Free tips + updates</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 800, letterSpacing: '-.03em', marginBottom: 10, color: 'var(--black)' }}>
+            Get weekly dasher tips<br />for your city
+          </h2>
+          <p style={{ fontSize: 14, color: 'var(--gray)', marginBottom: 24, lineHeight: 1.6 }}>
+            Peak time alerts, zone strategy, and promo codes — straight to your inbox. Free forever.
+          </p>
+          {subStatus === 'success' ? (
+            <div style={{ background: 'var(--green)', color: 'var(--white)', padding: '14px 24px', borderRadius: 12, fontSize: 15, fontWeight: 500 }}>
+              ✓ You're in! Watch your inbox for tips.
+            </div>
+          ) : (
+            <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: 8, maxWidth: 420, margin: '0 auto', flexWrap: 'wrap' }}>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                style={{ flex: 1, minWidth: 200, padding: '13px 16px', border: '1.5px solid var(--gray-mid)', borderRadius: 10, fontSize: 14, outline: 'none', background: 'var(--white)' }}
+              />
+              <button type="submit" disabled={subLoading} style={{ padding: '13px 24px', background: 'var(--green)', color: 'var(--white)', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                {subLoading ? 'Saving...' : 'Get free tips →'}
+              </button>
+              {subStatus === 'error' && <p style={{ width: '100%', color: 'var(--red)', fontSize: 13, margin: 0 }}>Something went wrong — try again.</p>}
+            </form>
+          )}
         </div>
       </div>
 
