@@ -1,5 +1,6 @@
 import './globals.css'
 import { Geist, Inter } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/react'
 
 const geist = Geist({
   subsets: ['latin'],
@@ -47,6 +48,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         {children}
+        <Analytics />
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
