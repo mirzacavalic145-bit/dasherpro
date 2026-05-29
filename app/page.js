@@ -158,7 +158,7 @@ export default function HomePage() {
       </div>
 
       <footer>
-        © {new Date().getFullYear()} DasherPro · Not affiliated with DoorDash, Inc. · Built for independent contractors.
+        © {new Date().getFullYear()} DasherPro · <Link href="/privacy">Privacy Policy</Link> · Not affiliated with DoorDash, Inc. · Built for independent contractors.
       </footer>
     </>
   )
