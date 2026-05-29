@@ -9,11 +9,12 @@ import { getSupabaseAdmin } from '../../../lib/supabase'
 export async function POST(req) {
   try {
     const { city } = await req.json()
-    if (!city || city.trim().length < 2) {
-      return Response.json({ error: 'City name required' }, { status: 400 })
+    if (!city || city.trim().length < 2 || city.trim().length > 100) {
+      return Response.json({ error: 'City name required (2–100 characters)' }, { status: 400 })
     }
+    const sanitizedCity = city.trim().replace(/[^\w\s\-\.,]/g, '').slice(0, 100)
 
-    const cityKey = city.trim().toLowerCase().replace(/\s+/g, '-')
+    const cityKey = sanitizedCity.toLowerCase().replace(/\s+/g, '-')
 
     // ── 1. Check cache first (7-day TTL) — non-fatal if Supabase unavailable ──
     try {
@@ -36,7 +37,7 @@ export async function POST(req) {
     }
 
     // ── 2. Generate fresh guide with Claude ───────────────────────
-    const prompt = `You are DasherPro's local market intelligence engine. Generate a detailed, actionable DoorDash market guide for: ${city}
+    const prompt = `You are DasherPro's local market intelligence engine. Generate a detailed, actionable DoorDash market guide for: ${sanitizedCity}
 
 Return ONLY valid JSON in exactly this structure (no markdown, no explanation):
 {
@@ -71,7 +72,7 @@ Return ONLY valid JSON in exactly this structure (no markdown, no explanation):
   "marketNotes": "2-3 sentences about what makes this specific market unique for dashers — weather, demographics, traffic patterns, etc."
 }
 
-Use your knowledge of ${city}'s geography, restaurant districts, demographics, and traffic patterns. Be specific — name real neighborhoods, areas, and patterns. If you don't know the city well, give general but honest guidance. Always return 4 zones.`
+Use your knowledge of ${sanitizedCity}'s geography, restaurant districts, demographics, and traffic patterns. Be specific — name real neighborhoods, areas, and patterns. If you don't know the city well, give general but honest guidance. Always return 4 zones.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -100,7 +101,7 @@ Use your knowledge of ${city}'s geography, restaurant districts, demographics, a
       const supabaseAdmin = getSupabaseAdmin()
       await supabaseAdmin
         .from('market_guides')
-        .upsert({ city_key: cityKey, city_name: city, guide, created_at: new Date().toISOString() })
+        .upsert({ city_key: cityKey, city_name: sanitizedCity, guide, created_at: new Date().toISOString() })
     } catch (writeErr) {
       console.warn('Cache write skipped:', writeErr.message)
     }

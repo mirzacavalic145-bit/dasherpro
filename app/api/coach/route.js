@@ -33,9 +33,19 @@ export async function POST(req) {
 
     const { messages, city } = await req.json()
 
+    if (!Array.isArray(messages) || messages.length > 20) {
+      return Response.json({ reply: 'Invalid request.' }, { status: 400 })
+    }
+
+    const sanitizedMessages = messages
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .map(m => ({ role: m.role, content: String(m.content).slice(0, 2000) }))
+
+    const sanitizedCity = city?.trim().replace(/[^\w\s\-\.,]/g, '').slice(0, 100) || 'their local market'
+
     const systemPrompt = `You are DasherPro's AI strategy coach — an expert on maximizing DoorDash earnings for dashers across the entire United States.
 
-The user is dashing in: ${city || 'their local market'}.
+The user is dashing in: ${sanitizedCity}.
 
 Your role: give direct, specific, actionable advice. No fluff. When you mention zones, use real neighborhood names for their city. When you mention earnings, use realistic dollar ranges. When you mention timing, be specific (e.g. "4:30–9 PM Friday" not "evenings").
 
@@ -62,7 +72,7 @@ Keep responses concise: 2–4 short paragraphs max. Be like a veteran dasher men
         model: 'claude-sonnet-4-6',
         max_tokens: 800,
         system: systemPrompt,
-        messages,
+        messages: sanitizedMessages,
       }),
     })
 

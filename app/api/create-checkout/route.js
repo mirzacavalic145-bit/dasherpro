@@ -8,11 +8,11 @@ import { getStripe, PLANS } from '../../../lib/stripe'
 export async function POST(req) {
   try {
     const { planKey } = await req.json()
-    const plan = PLANS[planKey]
-
-    if (!plan) {
+    const ALLOWED_PLANS = ['hustler', 'pro', 'annual']
+    if (!planKey || !ALLOWED_PLANS.includes(planKey)) {
       return Response.json({ error: 'Invalid plan' }, { status: 400 })
     }
+    const plan = PLANS[planKey]
 
     const session = await getStripe().checkout.sessions.create({
       mode: 'subscription',

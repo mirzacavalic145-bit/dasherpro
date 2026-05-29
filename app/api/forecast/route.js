@@ -7,11 +7,20 @@ export async function POST(req) {
   try {
     const { city, day, startTime, endTime } = await req.json()
 
-    if (!day || !startTime || !endTime) {
-      return Response.json({ error: 'day, startTime, endTime required' }, { status: 400 })
+    const VALID_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+    const VALID_TIMES = ['6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','4:30 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM']
+
+    if (!day || !VALID_DAYS.includes(day)) {
+      return Response.json({ error: 'Invalid day' }, { status: 400 })
+    }
+    if (!startTime || !VALID_TIMES.includes(startTime)) {
+      return Response.json({ error: 'Invalid start time' }, { status: 400 })
+    }
+    if (!endTime || !VALID_TIMES.includes(endTime)) {
+      return Response.json({ error: 'Invalid end time' }, { status: 400 })
     }
 
-    const cityLabel = city?.trim() || 'your market'
+    const cityLabel = city?.trim().replace(/[^\w\s\-\.,]/g, '').slice(0, 100) || 'your market'
 
     const prompt = `You are DasherPro's earnings forecast engine. A DoorDash dasher in ${cityLabel} wants to know how much they can earn.
 
