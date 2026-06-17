@@ -1,7 +1,5 @@
 // POST /api/webhook
-// Handles Stripe webhook events to update user subscription status in Supabase
-// Set up at: https://dashboard.stripe.com/webhooks
-// Events to listen for: checkout.session.completed, customer.subscription.deleted
+// Handles Stripe webhook events — links subscriptions to Supabase users
 
 export const dynamic = 'force-dynamic'
 
@@ -26,24 +24,35 @@ export async function POST(req) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object
-        const { planKey } = session.metadata
+        const { planKey, userId } = session.metadata
 
-        await supabaseAdmin.from('subscriptions').upsert({
-          stripe_customer_id: session.customer,
-          stripe_subscription_id: session.subscription,
-          plan: planKey,
-          status: 'active',
-          updated_at: new Date().toISOString(),
-        })
-        break
-      }
+        if (userId) {
+          const customerEmail =
+            session.customer_email || session.customer_details?.email || null
 
-      case 'customer.subscription.deleted': {
-        const sub = event.data.object
-        await supabaseAdmin
-          .from('subscriptions')
-          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-          .eq('stripe_subscription_id', sub.id)
+          // Link Stripe customer to user profile
+          await supabaseAdmin.from('profiles').upsert(
+            {
+              id: userId,
+              email: customerEmail,
+              stripe_customer_id: session.customer,
+            },
+            { onConflict: 'id' }
+          )
+
+          // Create subscription record linked to user
+          await supabaseAdmin.from('subscriptions').upsert(
+            {
+              stripe_customer_id: session.customer,
+              stripe_subscription_id: session.subscription,
+              plan: planKey,
+              status: 'trialing',
+              user_id: userId,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'stripe_subscription_id' }
+          )
+        }
         break
       }
 
@@ -52,6 +61,15 @@ export async function POST(req) {
         await supabaseAdmin
           .from('subscriptions')
           .update({ status: sub.status, updated_at: new Date().toISOString() })
+          .eq('stripe_subscription_id', sub.id)
+        break
+      }
+
+      case 'customer.subscription.deleted': {
+        const sub = event.data.object
+        await supabaseAdmin
+          .from('subscriptions')
+          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
           .eq('stripe_subscription_id', sub.id)
         break
       }

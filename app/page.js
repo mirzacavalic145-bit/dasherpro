@@ -1,12 +1,18 @@
 'use client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PLANS } from '../lib/stripe'
+import { getSupabase } from '../lib/supabase'
 
 export default function HomePage() {
   const [email, setEmail] = useState('')
   const [subStatus, setSubStatus] = useState('')
   const [subLoading, setSubLoading] = useState(false)
+  const [authUser, setAuthUser] = useState(null)
+
+  useEffect(() => {
+    getSupabase().auth.getUser().then(({ data: { user } }) => setAuthUser(user))
+  }, [])
 
   const handleSubscribe = async (e) => {
     e.preventDefault()
@@ -32,12 +38,21 @@ export default function HomePage() {
   }
 
   const handleCheckout = async (planKey) => {
+    const { data: { user } } = await getSupabase().auth.getUser()
+    if (!user) {
+      window.location.href = `/signup?plan=${planKey}`
+      return
+    }
     const res = await fetch('/api/create-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ planKey }),
     })
-    const { url } = await res.json()
+    const { url, error } = await res.json()
+    if (error === 'Not authenticated') {
+      window.location.href = `/signup?plan=${planKey}`
+      return
+    }
     if (url) window.location.href = url
   }
 
@@ -53,7 +68,14 @@ export default function HomePage() {
           <div className="nav-links">
             <button className="nav-link" onClick={() => document.getElementById('features').scrollIntoView({ behavior: 'smooth' })}>Features</button>
             <button className="nav-link" onClick={() => document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })}>Pricing</button>
-            <Link href="/dashboard" className="nav-cta">Open App →</Link>
+            {authUser ? (
+              <Link href="/dashboard" className="nav-cta">Dashboard →</Link>
+            ) : (
+              <>
+                <Link href="/login" className="nav-link">Sign in</Link>
+                <Link href="/signup" className="nav-cta">Start free trial →</Link>
+              </>
+            )}
           </div>
         </div>
       </nav>

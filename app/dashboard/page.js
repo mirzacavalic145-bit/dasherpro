@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { getSupabase } from '../../lib/supabase'
 
 const PANELS = [
   { id: 'overview',  label: 'Overview',      icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z' },
@@ -284,6 +285,15 @@ export default function DashboardPage() {
             <div className="sb-plan-name">Pro Dasher</div>
             <div className="sb-plan-desc">Unlimited AI · All cities</div>
           </div>
+          <button
+            onClick={async () => {
+              await getSupabase().auth.signOut()
+              window.location.href = '/'
+            }}
+            style={{ marginTop: 10, width: '100%', padding: '9px', background: 'transparent', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8, color: 'rgba(255,255,255,.5)', fontSize: 12, cursor: 'pointer' }}
+          >
+            Sign out
+          </button>
         </div>
       </div>
 
