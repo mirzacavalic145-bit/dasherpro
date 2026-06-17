@@ -39,13 +39,8 @@ function SignupForm() {
     }
 
     if (plan) {
-      const res = await fetch('/api/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planKey: plan }),
-      })
-      const { url } = await res.json()
-      if (url) { window.location.href = url; return }
+      window.location.href = `/api/start-checkout?plan=${plan}`
+      return
     }
 
     router.push(next || '/#pricing')
