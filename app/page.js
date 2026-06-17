@@ -38,14 +38,17 @@ export default function HomePage() {
   }
 
   const handleCheckout = async (planKey) => {
-    const { data: { user } } = await getSupabase().auth.getUser()
-    if (!user) {
+    const { data: { session } } = await getSupabase().auth.getSession()
+    if (!session?.access_token) {
       window.location.href = `/signup?plan=${planKey}`
       return
     }
     const res = await fetch('/api/create-checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
       body: JSON.stringify({ planKey }),
     })
     const { url, error } = await res.json()

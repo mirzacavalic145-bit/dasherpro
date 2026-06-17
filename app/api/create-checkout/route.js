@@ -1,10 +1,10 @@
 // POST /api/create-checkout
 // Creates a Stripe Checkout session — requires authenticated user
+// Accepts Bearer token in Authorization header (more reliable than cookies)
 
 export const dynamic = 'force-dynamic'
 
 import { getStripe, PLANS } from '../../../lib/stripe'
-import { createSupabaseServerClient } from '../../../lib/supabase-server'
 import { getSupabaseAdmin } from '../../../lib/supabase'
 
 export async function POST(req) {
@@ -15,15 +15,22 @@ export async function POST(req) {
       return Response.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
-    const supabase = await createSupabaseServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    // Verify user via Bearer token passed from client
+    const authHeader = req.headers.get('authorization')
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
 
-    if (!user) {
+    if (!token) {
+      return Response.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    const admin = getSupabaseAdmin()
+    const { data: { user }, error: userError } = await admin.auth.getUser(token)
+
+    if (userError || !user) {
       return Response.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
     const plan = PLANS[planKey]
-    const admin = getSupabaseAdmin()
 
     const { data: profile } = await admin
       .from('profiles')

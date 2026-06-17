@@ -39,8 +39,19 @@ function SignupForm() {
     }
 
     if (plan) {
-      window.location.href = `/api/start-checkout?plan=${plan}`
-      return
+      const { data: { session } } = await getSupabase().auth.getSession()
+      if (session?.access_token) {
+        const res = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ planKey: plan }),
+        })
+        const { url } = await res.json()
+        if (url) { window.location.href = url; return }
+      }
     }
 
     router.push(next || '/#pricing')
