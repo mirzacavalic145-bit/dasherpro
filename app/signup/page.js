@@ -17,7 +17,7 @@ function SignupForm() {
   const handleSignup = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setError(`DEBUG: plan=${plan}, next=${next}`)
+    setError('')
 
     const supabase = getSupabase()
     const { data, error: signupError } = await supabase.auth.signUp({
