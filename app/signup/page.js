@@ -31,6 +31,16 @@ function SignupForm() {
       return
     }
 
+    // Use session from signUp response directly — no second getSession() call needed
+    const session = data.session
+
+    if (!session?.access_token) {
+      // Email confirmation is still enabled in Supabase — user must confirm first
+      setError('Almost there! Check your email and click the confirmation link, then come back to sign in.')
+      setLoading(false)
+      return
+    }
+
     if (data.user) {
       await supabase.from('profiles').upsert(
         { id: data.user.id, email: data.user.email },
@@ -39,19 +49,17 @@ function SignupForm() {
     }
 
     if (plan) {
-      const { data: { session } } = await getSupabase().auth.getSession()
-      if (session?.access_token) {
-        const res = await fetch('/api/create-checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ planKey: plan }),
-        })
-        const { url } = await res.json()
-        if (url) { window.location.href = url; return }
-      }
+      const res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ planKey: plan }),
+      })
+      const resData = await res.json()
+      if (resData.url) { window.location.href = resData.url; return }
+      if (resData.error) { setError(`Checkout failed: ${resData.error}`); setLoading(false); return }
     }
 
     router.push(next || '/#pricing')
