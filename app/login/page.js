@@ -80,6 +80,11 @@ function LoginForm() {
             required
             style={{ padding: '13px 16px', border: '1.5px solid var(--gray-mid)', borderRadius: 10, fontSize: 14, outline: 'none', background: 'var(--white)' }}
           />
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Link href="/forgot-password" style={{ fontSize: 12, color: 'var(--gray)', textDecoration: 'none' }}>
+              Forgot password?
+            </Link>
+          </div>
           {error && (
             <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{error}</p>
           )}
